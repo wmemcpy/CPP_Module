@@ -1,0 +1,158 @@
+Merge insert sort (découvert par Ford et Johnson, probablement nommé par D. Knuth) est un algo qui cherche a minimiser le nombre de comparaisons effectuées pour trier une liste. Cet algo utilise la recherche dichotomique (binary search en anglais). C'est parfois appelé la recherche par dictionnaire (je compare mon élément à celui du milieu de la liste, pour diviser la taille de mon champ de recherche par deux, et je recommence). Cette technique permet d'insérer un élément dans une liste de taille n en log2(taille liste) comparaisons.
+
+**L'algo:**
+
+En entrée: une liste non vide d'éléments.
+En sortie: une liste triée de ces éléments.
+étape 1: Merge. Si il y n'y a qu'un élément dans la liste, la retourner, sinon, appairer les éléments et trier les deux éléments de chaque paire. Faire une liste de ces paires.
+étape 2: Récursion. Appeler cet algorithme sur cette liste de paire.
+étape 3: Insert. Extraire de la liste de paire (qui a donc été triée lors de l'appel récursif à l'étape 2) une liste triée des plus grands éléments de chaque paire. Insérer le plus petit élément  de chaque paire dans la liste triée en suivant une progression de Jacobsthal. Retourner la liste triée.
+
+N.B. attention au terme "élément": lors de l'appel récursif, on appelle notre fonction sur une liste de paire d'éléments. Pour l'instance de la fonction qui recevra cette liste de paire, cette liste est une liste d'éléments.
+
+**Les explications**
+
+**Étape 1**: je fais des paires d'éléments (e.g. en doublant la longueur de mes itérateurs), et je trie les deux éléments entre eux. A la fin de l’étape 1, j'ai une liste de paires d'éléments (dans l'explication de l’étape 3, cette paire sera notée P(a, b) avec a le petit élément, et b le grand); si on me donne le plus grand élément d'une paire, il faut que je puisse retourner le plus petit immédiatement (c'est à dire sans faire de comparaisons, de parcours de liste (et donc de comparaisons...)... l’idée, c'est de faire le moins de comparaisons possible).
+
+**Etape 2**: je suis en train de coder un algo de tri. Quand j'aurais fini et que je l'aurais compilé, j'aurais une fonction qui, quand on lui passe une liste d'éléments, la trie. Il se trouve que dans cet algorithme, j'ai besoin de trier une liste deux fois plus petite que celle reçue en entrée: j'utilise cette fonction. Pourquoi ça marche:  il y a une remarque à se faire: une liste de taille 1 est triée. A force de diviser la taille de notre liste par deux (au fil des appels récursifs successifs), on va bien arriver à une liste de taille 1, et la, la fonction pourra me renvoyer une liste triée. De cette liste triée, je vais donc pouvoir produire une liste triée de taille deux et la renvoyer. L'appel récursif du dessus va recevoir une liste de taille deux triée et pouvoir produire une liste triée de taille 4...
+J'ai maintenant une liste de paires d'éléments triée suivant le plus grand élément de chaque paire.
+
+Une première **observation** ici: le petit élément de la paire la plus petite (donc dont le plus grand élément est plus petit que tous les autres plus grands éléments) est plus petit que tous les éléments de cette liste (la liste des plus grands éléments de chaque paire... ): je vais donc pouvoir l'insérer à l'étape trois sans avoir à effectuer aucune comparaison... (Et c'est là qu'il faut pouvoir accéder à cet élément depuis l'élément avec lequel il a été appairé sans avoir à faire de comparaisons).
+
+Une deuxième **observation**: après une insertion, la liste sera toujours triée.
+	
+Une **digression**: vu que je vais devoir insérer des éléments dans une liste triée, je vais pouvoir faire des recherches par dichotomie. C'est donc mieux si j'ai 2^n-1 éléments dans ma liste (pour un certain n... encore une histoire de log).
+Plus concrètement: on va commencer par regarder combien de comparaisons je dois faire pour insérer un élément dans des listes de différentes tailles; et on va essayer de remarquer que le nombre de comparaisons nécessaires augmente de un quand on passe d'une liste de taille 2^n-1 à une liste de taille 2^n. Si je veux insérer un élément dans une liste de:
+- 0 (= 2^0-1) éléments: j'ai juste à l'insérer: 0 comparaisons
+- 1 (= 2^1-1 = 2^0) élément: j'ai une comparaison à faire et à insérer: 1 comparaison
+- 2 éléments: une (si j'ai de la chance: je devais insérer 1 dans la liste (3,5), j'ai choisi de commencer par comparer avec 3, et j'ai pu l'insérer direct) ou deux comparaisons (si j'ai eu moins de chance: je devais insérer 4); on se base sur le pire cas: 2 comparaisons
+- 3 (= 2^2-1) éléments: une comparaison avec celui de milieu qui va me dire de quel côté me diriger, une liste de un de chaque cote(et j'ai déjà noté que pour une liste de un, il me fallait une comparaison): 1 + 1 = 2 comparaisons, comme pour une liste de 2 éléments.
+- 4 éléments: un peu comme pour les listes de deux éléments, ça va dépendre de si j'ai de la chance ou pas; deux ou trois comparaison: 3 comparaisons
+- 5 éléments: une comparaison avec celui du milieu, une liste de deux de chaque côté: 3 comparaisons aussi
+- 6 éléments: je te la fais courte: encore 3 comparaisons
+- 7 (= 2^2-1) éléments: une comparaison avec celui du milieu, une liste de trois de chaque côté: toujours 3 comparaisons et à 8 éléments, on passe à 4 comparaisons; à 16 à 5... Et donc avec une recherche par dichotomie, rechercher dans une liste de 8 ou de 15 éléments, ça prend le même temps.
+
+**Étape 3**: En reprenant la notation des paire P(a, b), j'insère donc le petit élément "a1" de la paire la plus petite P1(a1, b1) (P1 parce que c'est la plus petite, ensuite, P2, P3...) sans faire de comparaisons. Conceptuellement, j'ai maintenant une liste a1, b1, P2, P3... (Conceptuellement parce que je suis en train de faire une liste ou je mélange des éléments (a1, b1), et des paires d'éléments (P2...): mon compilateur me ferait la gueule)
+J'ai commencé par P1.
+Je pourrais insérer le petit élément a2 de P2(a2, b2), mais je l'insérerai  dans une liste de taille 2: 2 comparaisons, et ensuite, je devrais insérer le petit élément a3 de P3 dans une liste de 4 éléments (a1, b1, a2 et b2): donc 3 comparaisons (le nombre de comparaisons pour les listes de taille n est juste au dessus), pour un total de 5 comparaisons.
+ Alors que si j'insère le petit élément a3 de P3(a3, b3) dans la liste [a1, b1, P2] (techniquement, on l'insérera dans [a1, b1, b2]), puis que j'insère a2 (soit dans la liste [a1, b1], soit dans une liste composée de a1, b1 et a3), donc deux insertions dans des listes de taille 3, ça fait chuter le total à 4 comparaisons.
+Donc les suivants, c'est P3 puis P2.
+Maintenant, j'ai dans ma liste a1, b1, a2, b2, a3 et b3 triés: 6 éléments. Exactement comme la fois précédente, si j'essaye d'insérer a4 dans une liste de 6, j'insérerai a5 dans une liste de 8: donc 3 + 4 = 7 comparaisons, alors que si j’insère a5 puis a4, les deux seront dans des listes d'au plus 7, pour un total de 6 comparaisons.
+Et les suivants: P5, P4.Next one.
+Maintenant, dans ma liste, j'ai a1, b1, a2, b2, a3, b3, a4, b4 a5 et b5: 10 éléments. Le prochain 2^n-1, c'est 15: je peux donc aller jusqu’à P11 (j'ai 10 éléments, dans ma liste, et j'en veux 15: il m'en manque 5, je suis a P5, il me faut donc ceux de P6à P10, il faut donc que je commence par P11), et je ne ferais que des insertions dans des listes de 15 éléments (donc max 4 comparaisons !) .
+Puis P11, P10, P9, P8, P7, P6.
+un petit dernier:
+Quand j'aurais inséré P11, P10, P9, P8, P7 et P6, j'aurais 22 éléments dans ma liste, le prochain 2^n-1, ça sera 31; 31 - 22, il en manque 9, je suis à p11, et je dois prendre le suivant: 11 + 9 + 1 = 21
+Et P21...
+A chaque étape,on a fissionné des paires pour les insérer dans une liste de taille 2^(n-1)-1, et on cherche de combien il faut qu'on avance pour insérer nos éléments dans une liste de taille 2^n-1; on commence à voir un motif émerger:
+A la prochaine étape, il nous manquera ce qu'il nous manque plus deux fois ce qu'il nous manquait à l'étape précédente...
+Donc j’insère mes éléments suivant la suite de Jacobsthal'  j(n+1) = jn + 2* j(n-1)  (j0 = 1, J1 = 3) pour minimiser le nombre de comparaisons (sur Jacobsthal, l'explication de Knuth est plus rigoureuse, même si il va un peu vite dans ses calculs: quand il divise par 3, il "oublie" de multiplier par (2+1) et d'étendre le tout... Mais si on rajoute ces étapes, ça se lit bien; le lien est juste en dessous)
+
+Et j'ai une liste d'éléments triée à renvoyer.
+
+Des liens pour aller plus loin:
+- Pour implémenter Jacobsthal et apprendre des trucs sur les templates:
+https://medium.com/zerone-magazine/templates-and-compile-time-execution-c22234a6cd66
+- Pour y comprendre quelque chose à ces histoires de log (ce mec est un génie de pédagogie : pour tous ceux qui se disent qu'ils veulent rattraper leur niveau en maths, je ne saurais que trop conseiller sa chaîne Youtube):
+https://www.youtube.com/live/cEvgcoyZvB4?feature=share
+- Une implémentation en cpp pas 98:
+https://codereview.stackexchange.com/questions/116367/ford-johnson-merge-insertion-sort
+- Et Knuth (p. 185):
+https://doc.lagout.org/science/0_Computer%20Science/2_Algorithms/The%20Art%20of%20Computer%20Programming%20%28vol.%203_%20Sorting%20and%20Searching%29%20%282nd%20ed.%29%20%5BKnuth%201998-05-04%5D.pdf
+
+
+------------------------
+
+
+Ford et Johnson ont proposé un algo de tri qui minimise le nombre de comparaisons. Ce n'est pas un algo fait pour être exécuté sur un ordinateur (même si c'est un bon exercice de l'implémenter; mais une comparaison, pour nos processeurs actuels, c'est une opération élémentaire). Par contre, c'est un algo utile si on nous demande de programer le logiciel qui doit orchestrer les tests pour classer les produits de notre client. Surtout si ces tests sont longs et chers (contexte industriel oblige). Là, notre expertise peut lui faire économiser pas mal de temps et d'argent, et donc se négocie bien (ou nos fourmis exploiteront de meilleures ressources plus vite...). Et c'est dans ces contextes qu'il il prend son intérêt.PS: Une note amusante: merge sort est aussi un algo de tri récursif. Insert sort, lui, est considéré comme un algorithme itératif (bien qu'on puisse l'implémenter en récursif... Et qu'on puisse coder merge sort en iteratif (en bottom up...). C'est subtil !).
+
+Apparemment, certains se basent encore sur l'explication de punkchameleon (sur GitHub), qui n'a pas compris la recursion (le reste de ses explications est bon; un mec de 42 Japan a ouvert un ticket sur le sujet), et qui passent donc à côté d'un concept important: leur fourmies seront moins performantes (ou je vais pouvoir montrer à leur client que je fais mieux que leur expert et récupérer le contrat), c'est dommage. On s'est inscrit à 42, pas en formation pôle emploi, 3 mois pour apprendre java: c'est aussi pour être challengé. Ca me donne l'opportunité (le plaisir même...🧂) de revenir deux secondes sur les algorithmes, la récursivité... Et les algos recursifs !
+
+D'abord, de quoi on parle:
+
+Sur wikipédia, un algorithme c'est :
+"une suite finie et non ambiguë d'instructions et d’opérations permettant de résoudre une classe de problèmes."
+Notons bien la non ambiguïté. Quand on parle avec quelqu'un qui a compris l'algo, on sait qu'on parle de la même chose. Si on n'a pas compris un algo pareil, c'est qu'au moins une des deux personnes ne l'a pas compris (ce qui ne veut pas dire qu'il ne peut pas y avoir de confusion: si, je me mettai a utiliser la reverse polish notation dans mes explications, tant que vous n'aurez pas remarqué que j'utilise pas le système standard, on va pas forcément avoir l'impression de parler de la même chose. Ou si j'implémentais mon algo pour trier par ordre décroissant : tout serait inversé et ça va demander une petite gymnastique pour se rendre compte que, in fine, c'est la même procédure). Après, les algos peuvent être organisés différemment dans leurs implémentations, les explications peuvent être plus ou moins pertinentes (et résonner plus ou moins avec nous, et notre compréhension des choses). Je ne dis pas qu'il n'y a qu'une manière de voir les choses ni que la mienne est bonne. Mais qu'il y a des choses qui sont quand même assez clairement définies. Après, pour ceux qui pensent que la terre est plate, qu'il y avait plus de monde à l'investiture de Trump qu'à celle d'Obama... Bref, qu'il suffit de dire une chose suffisamment fort pour en faire une réalité, ça va être compliqué.
+
+Tant qu'à tout définir, la classe de problème qui nous intéresse, c'est le tri de listes. De n'importe quelle liste.
+
+Toujours sur wikipédia, la récursivité est définie comme:
+"une démarche qui fait référence à l'objet même de la démarche à un moment du processus (...). En informatique (...), une fonction ou plus généralement un algorithme peut contenir un ou des appels à lui-même, auquel cas il est dit récursif."
+
+Donc, punkchameleon (son code fonctionne: ça trie), dans ses explications:
+"Step 4, The next step in FJMI is to recursively sort all the pairs by their largest element. In this implementation, we use ‘sort_by_larger_value’ (...), a modified insertion sort."
+Étape 4, la prochaine étape de FJMI est de trier recursivement la liste de paires suivant leurres plus grands elements.
+Le problème, c'est que pour trier recursivement, il faut comprendre le principe de récursivité...
+
+Et moi, dans mon explication précédente : une fonction n'est pas récursive parce qu'elle appelle une fonction récursive, une fonction est récursive car elle s'appelle elle même (c'est la même erreur, mais là où l'on faisait appel a merge sort, il fait appel a insertion sort, aka insert sort, qu'il implémente en récursif...).
+
+Maintenant que j'en ai fini avec les définitions et les citations, place aux explications:
+
+Oublions qu'on est en train de coder merge insert sort, et disons qu'on est en train de décrire une procédure pour trier une liste : à une certaine étape de la procédure, je dois trier une autre liste; l'utilisation de n'importe quel algo de tri rendra la procédure fonctionelle.
+
+Si l'algo de tri qu'on utilise est insert sort (respectivement merge sort), notre algo de tri, c'est insert sort, et notre procédure est une décoration*.
+Par contre, si, à cette étape la, notre procédure s'appelle elle même (et que ca fonctionne), alors notre procédure est un algo de tri.
+
+*Je dis décoration, mais ici, on est sur du Rococo, baroque tardif (c'est très compliqué et on y comprend pas grand chose: la bonne nouvelle, c'est que c'était la partie dure de l'algo). Une procédure plus minimaliste pourrait être:
+
+"Ma procédure pour trier une liste
+Étape 1: ajouter 1 à tous les éléments de la liste.
+Étape 2: appeler un algo de tri sur cette nouvelle liste.
+Étape 3: retirer 1 à tous les éléments de la liste triée.
+Retourner la liste triée."
+
+Cette procédure fonctionne (ça tri). Mais si a l'étape 2, j'essaye d'appeler recursivement ma procédure plutôt que d'appeler un algo de tri, il ne va pas se passer grand chose  (ça va overflow à la limite): cette procédure n'est donc pas un algo de tri (pourtant, elle trie une liste... Mais l'algo de tri, c'est le truc que j'ai appelé à l'étape 2: mes étapes 1 et 3 sont décoratives. Je pourrais les suprimer, ca fonctionnerait tout aussi bien).
+
+Similairement, le code de punkchameleon est une procédure de tri très compliquée, qui comme merge-insert sort, appaire les éléments pour les insérer ensuite suivant la progression de jacobsthal, mais fait, entre les deux étapes, appel à insert sort: l'algo de tri, c'est insert sort. Le reste, c'est de la déco. Même si cette déco, c'est la procédure de FJ... C'est ballot: sur la moitié de notre liste, on n'optimise pas le nombre de comparaisons. On aurait donc pu trier cette liste en en effectuant moins.
+
+Les codes de Morwenn, decidelyso, codeoptimist... C'est des merge-insert sorts. L'algo de tri qu'ils appellent, c'est la fonction qu'ils sont en train de coder. Et ça fait toute la différence.
+
+Tout ça pour dire que merge-insert sort est un algo de tri, pas une procédure compliquée qui décore un algo de tri.
+
+La truc qui fait de Ford Johnson un algo de tri, c'est qu'on peut appeler recursivement la "procédure" qu'ils décrivent, et que ça va fonctionner.
+Pourquoi ça va fonctionner: parce que ça trie. Et parce qu'il y a un critère d'arrêt. Un peu les deux en même temps (d'où la numérotation wtf).
+
+b) Si j'ai compris pourquoi cette procédure, quand on lui donne une liste, peu importe sa taille, arrive à la trier (même si pour moi, ce qui se passe lors de cette étape récursive est mysterieux: je sais juste que j'ai accès à une boite noire qui peut trier ma liste de paires (soit, une liste deux fois plus petite que celle que j'ai recue en entrée). Peu importe comment. Ce qui est important, c'est que je sois persuadé que cette procedure, si elle a accès a cette boite noire, est capable de trier n'importe quelle liste)... Pourquoi ne pas faire appel à cette procédure même, en lieu et place de ma boite noire ?
+
+a) Maintenant, quelle que soit la taille de la liste que je reçois initialement, je ne vais pouvoir la couper en deux qu'un certain nombre de fois avant de me retrouver avec une liste à un seul élément, qui, par nature, est triée ( (approximativement) log2(taille liste) fois). Autrement dit, il va y avoir log2(taille liste) appels recursifs à ma fonction. Et à partir de là, je vais pouvoir "remonter" ma chaîne d'appels recursifs successifs.
+
+Mes explications sûr le pourquoi ça trie et le comment ça optimise les comparaisons sont dans le pavé précédent.
+
+Pour ceux qui préfèrent la pratique: on va dérouler l'algo sur l'instance [7, 8, 5, 9, 11, 0, 2, 1, 10, 3, 4, 6] (avec des bullets pour noter la profondeur dans notre recursion: on est au premier niveau, une bullet)
+
+. Apairrer: [(7, 8), (5, 9), (11, 0), (2, 1), (10, 3), (4, 6)]
+. Comparer\*: [8, 9, 11, 2, 10, 6] et... Récursion (on va trier cette nouvelle liste de la même manière que la première, donc une bullet en plus, mais la récursion, c'est la phase 2 de l'algo: on reprendra pour la phase 3 quand l'appel récursif suivant me renverra cette liste triée):
+.. Apairrer: [(8, 9), (11, 2), (10, 6)]
+.. Comparer\*\*: [9, 11, 10] et... Récursion:
+... Apairrer: [(9 , 11)] je peux pas faire de paire avec le 10, je le garde pour plus tard.
+... Comparer\*\*\*: [11] et... Récursion:
+.... Critère d'arrêt atteint (liste de taille 1): je retourne la liste [11]... Et je commence à "remonter" ma chaîne d'appels (je repasse à 3 bullets).
+... Insérer: l'élément appairé à 11, le 9\*\*, j'ai la liste [9, 11]. J'insère le 10 que je m'étais gardé pour plus tard et je retourne la liste [9, 10, 11]
+.. Insérer: d'abord l'élément appairé au plus petit élément, 9, ici c'est 8\*, j'ai la liste [8, 9]. Ensuite, j'insère l'élément apairré à 11, ici le 2 dans la liste [8, 9, 10] (en fait, dans la liste [8, 9, (10, 6)]...) , puis l'élément apairré à 10 (le 6) dans la liste [2, 8, 9]. Je retourne la liste [2, 6, 8, 9, 10, 11]
+. Insérer: d'abord l'élément appairé à 2, puis celui appairé à  8, suivi de celui appairé à 6, ensuite celui appairé à  10, suivi de celui à 9, puis à 11 (suivant Jacobsthal...) et j'ai la liste [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] à renvoyer.
+
+Ma liste est triée.
+
+\* Attention, abus de notation incoming: plutôt que d'utiliser une paire, j'ai utiliser le plus grand élément de la paire. Mais c'est bien d'une paire qu'il s'agit : 8 represente la paire (7, 8); 9 c'est (5, 9)...
+\*\* J'ai noté 9, mais en fait, 9 c'est (8, 9)... Mais (8, 9) de l'étape précédente: donc 9 c'est  ((7,8), (5,9)) (abus de notation récursif !)
+\*\*\* Et 11 ici, c'est (9, 11)... Soit ((8,9), (2,11))... Ou (((7,8),(5,9)), ((1,2),(0,11)))
+
+Et si je représente ça sous forme d'arbre binaire, ça explique pourquoi on en voit sur la page de wikipédia sur la récursivité.
+
+https://previews.123rf.com/images/popaukropa/popaukropa1501/popaukropa150100022/35722304-r%C3%A9cursivit%C3%A9-les-mains-tenant-un-morceau-de-papier-r%C3%A9p%C3%A9tition-du-motif-illustration.jpg
+
+En parlant de représentation qui font comprendre des trucs: si on devait représenter la récursivité, on pourrait voir les choses comme ca.
+(Et si cette image est récursive, l'image qui s'affiche sur l'écran sur lequel je lis ce texte ne l'est pas. Même si il y a une image récursive dedans. Si je la mets en plein ecran, alors là oui, l'image affichée par mon écran serait récursive (ou alors en s'embetant a inclure tout ce qui s'affiche actuellement sur mon ecran dans notre image). Pour les fonctions, c'est pareil: c'est pour ça que je me suis auto-cité au début).
+
+Pour rentrer à 42, on a dû piloter une fusée (et faire un test de mémoire si je me souviens bien ^^). Fallait aller chercher des étoiles. Le pilotage de la fusée, c'était que du récursif, et il y avait des niveaux assez compliqués. Intrinsequement, c'est un concept que vous maîtrisez. On est certes dans un environnement moins ludique, mais, pour peu de se pencher dessus, ça peut être assez fun ces sujets. Faut pas se laisser impressionner par l'étiquette info théorique/mathématiques.
+
+J'espère que ça dissipe les dernières ambiguïtés et incompréhensions qu'il pouvait y avoir. Et parce qu'en fait, la recursion, c'est une étape vers des concepts plus avancés (et parce que parfois, être exposé à ces concepts plus avancés, ça motive la compréhension des trucs intermédiaires)...
+
+Laissez moi vous présenter l'impredicativité (l'auto-reference... Ou la récursivité sous hallucinogènes), parce que, toujours selon wikipédia,
+ "l'aphorisme suivant : « Pour comprendre le principe de récursivité, il faut d'abord comprendre le principe de récursivité », est imprédicatif".
+Et qu'il ne faut pas les confondre.
+(C'est cryptique comme exemple, alors qu'en vrai, c'est un sujet passionnant, que c'est la base du projet drquinn... Et, je crois, un concept nécessaire à la génération d'ia générales. Et comme un dessin vaut mille mots, je laisse la conclusion à un géant sur la question).
+
+https://moa.byu.edu/m-c-eschers-drawing-hands
+
+PS: Une note amusante: merge sort est aussi un algo de tri récursif. Insert sort, lui, est considéré comme un algorithme itératif (bien qu'on puisse l'implémenter en récursif... Et qu'on puisse coder merge sort en iteratif (en bottom up...). C'est subtil !).
